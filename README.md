@@ -1,7 +1,10 @@
 # 4.0-random
 some demos and experimentations with the ArcGIS API for Javascript
 
-- looking at the stars: https://ycabon.github.io/4.0-random/looking-at-the-stars.html
+### Looking at the stars:
+Brest building SceneLayer with a Camera placed at the Castle showcasing the positioning of stars and realistic atmosphere
+![Image of Yaktocat](https://ycabon.github.io/4.0-random/looking-at-the-stars.png)
+https://ycabon.github.io/4.0-random/looking-at-the-stars.html
 
 # Licence
 
