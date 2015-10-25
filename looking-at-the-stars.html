@@ -4,7 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Looking at the stars</title>
-  <link rel="stylesheet" href="//jsdev.arcgis.com/4.0beta2/esri/css/esri.css">
+  <link rel="stylesheet" href="//jsdev.arcgis.com/4.0beta2/esri/css/main.css">
   <script src="//jsdev.arcgis.com/4.0beta2/"></script>
   <style>
     html, body, #mapDiv {
@@ -50,7 +50,9 @@
         container: "mapDiv",
 
         environment: {
+          atmosphere: "realistic",
           lighting: {
+            date: new Date("Jan 1 2015 12:00:00 GMT+0200"),
             directShadows: true,
             ambientOcclusion: true
           }
@@ -72,7 +74,6 @@
 
       var dateField = document.getElementById("dateField");
       var minute = 60 * 1000;
-      view.environment.lighting.date = new Date("Jan 1 2015 12:00:00 GMT+0200");
       function updateDatefield() {
         var date = new Date();
         date.setTime(view.environment.lighting.date.getTime() + 2 * minute);
@@ -84,9 +85,6 @@
       updateDatefield();
 
       view.then(function() {
-        // TODO: update when available as a env prop
-        view.environmentManager.realisticAtmosphere = true;
-
         // every frame
         handle = Scheduler.addFrameTask({
           update: function() {
