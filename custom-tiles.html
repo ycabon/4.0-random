@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>MapView</title>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.0beta3/esri/css/main.css">
+  <style type="text/css" media="screen">
+    html, body, #mapDiv {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+
+  <script src="//js.arcgis.com/4.0beta3/"></script>
+
+  <script>
+    var map, view;
+
+    require([
+      "esri/Map",
+
+      "esri/layers/WebTiledLayer",
+      "esri/layers/FeatureLayer",
+      "esri/layers/SceneLayer",
+      "esri/layers/ArcGISElevationLayer",
+
+      "esri/renderers/SimpleRenderer",
+
+      "esri/symbols/SimpleFillSymbol",
+      "esri/symbols/MeshSymbol3D",
+      "esri/symbols/FillSymbol3DLayer",
+
+      "esri/views/SceneView",
+
+      "dojo/domReady!"
+    ], function (
+      Map,
+      WebTileLayer, FeatureLayer, SceneLayer, ArcGISElevationLayer,
+      SimpleRenderer,
+      SimpleFillSymbol, MeshSymbol3D, FillSymbol3DLayer,
+      SceneView
+    ) {
+
+      function grid(options) {
+        options = options || {};
+        let backgroundStyle = options.backgroundStyle || "#000000";
+        let majorLinesStyle = options.majorLinesStyle || "rgba(255, 255, 255, 0.25)";
+        let minorLinesStyle = options.minorLinesStyle || "rgba(255, 255, 255, 0.10)";
+        let size = options.size || 256;
+        let majorCells = options.majorCells || 4;
+        let minorCells = options.minorCells || 8;
+
+        let canvas = document.createElement("canvas");
+        let context = canvas.getContext("2d");
+
+        canvas.width = canvas.height = size;
+
+        context.fillStyle = backgroundStyle;
+        context.fillRect(0, 0, size, size);
+
+        let drawCellGrid = (x, y, size, cells) => {
+          let cellSize = size / cells;
+          x += 0.5;
+          y += 0.5;
+
+          context.beginPath();
+          for (let i = 0; i < cells; i++) {
+            context.moveTo(x + i * cellSize, y);
+            context.lineTo(x + i * cellSize, y + size);
+          }
+          context.stroke();
+
+          context.beginPath();
+          for (i = 0; i < cells; i++) {
+            context.moveTo(x, y + i * cellSize);
+            context.lineTo(x + size, y + i * cellSize);
+          }
+          context.stroke();
+        }
+
+        context.strokeStyle = majorLinesStyle;
+        drawCellGrid(0, 0, size, majorCells);
+
+        context.strokeStyle = minorLinesStyle;
+        for (let i = 0; i < majorCells; i++) {
+          for (let j = 0; j < majorCells; j++) {
+            drawCellGrid(i * size / majorCells, j * size / majorCells, size / majorCells, minorCells);
+          }
+        }
+
+        let promise = new Promise((resolve, reject) => {
+          var image = document.createElement("img");
+          image.src = canvas.toDataURL();
+          image.onload = () => {
+            image.onload = image.onerror = null;
+            resolve(image);
+          }
+          image.onerror = () => {
+            reject();
+          }
+        });
+
+        return promise;
+      }
+
+      // generates the grid image
+      // grid({
+      //   backgroundStyle: "#000000",
+      //   majorLinesStyle: "rgba(255, 255, 255, 0.25)",
+      //   minorLinesStyle: "rgba(255, 255, 255, 0.10)",
+      //   size: 256,
+      //   majorCells: 2,
+      //   minorCells: 4
+      // })
+      // .then((img) => document.body.appendChild(img));
+      // return;
+
+      map = new Map({
+        layers: [
+          new ArcGISElevationLayer({
+            url: "//elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+          }),
+          new WebTileLayer({
+            urlTemplate: "//ycabon.github.io/4.0-random/custom_tile.png"
+          }),
+          new FeatureLayer({
+            url: "//services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Countries_Natural_Earth_1_50M/FeatureServer/0",
+            renderer: new SimpleRenderer({
+              symbol: new SimpleFillSymbol({
+                color: "black",
+                outline: {
+                  color: "#FF5500",
+                  width: 3
+                }
+              })
+            })
+          }),
+          brest = new SceneLayer({
+            url: "//scene.arcgis.com/arcgis/rest/services/Hosted/Buildings_Brest/SceneServer/layers/0",
+            renderer: new SimpleRenderer({
+              symbol: new MeshSymbol3D(
+                new FillSymbol3DLayer({
+                  // If the value of material is not assigned, the default color will be grey
+                  material: {
+                    color: "rgba(128, 128, 255, 0.7)"
+                  }
+                })
+              )
+            })
+          })
+        ]
+      });
+
+      view = new SceneView({
+        container: "mapDiv",
+        center: [-100, 40],
+        zoom: 4,
+        map: map
+      });
+
+      brest.then(() => {
+        setTimeout(view.animateTo.bind(view, {
+          target: brest.fullExtent,
+          scale: 10000,
+          heading: 45,
+          tilt: 60
+        }), 4000);
+      });
+
+
+    });
+  </script>
+</head>
+<body >
+  <div id="mapDiv">
+
+    <!-- Left Pane -->
+    <!-- <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 250px; background: rgba(255,255,255,0.7);"> -->
+      <!-- Left Pane Content -->
+      <!-- <div style="position: relative; top: 10px; left: 10px; right: 10px; bottom: 10px;">
+        <span style="font-family: Arial; font-size: 40pt">4.0 MapView</span>
+      </div>
+    </div> -->
+  </div>
+</body>
+</html>
